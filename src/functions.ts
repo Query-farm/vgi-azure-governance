@@ -67,6 +67,22 @@ export function makeConditionalAccessPolicies(clientFactory: ClientFactory) {
     tags: {
       "vgi.category": "conditional-access",
       "vgi.title": "Conditional Access Policies",
+      // VGI515: the native duckdb_functions().examples carrier drops per-example
+      // descriptions, so mirror `examples` here as a described JSON tag.
+      "vgi.example_queries": JSON.stringify([
+        {
+          description: "All Conditional Access policies with their state",
+          sql: "SELECT id, display_name, state FROM azure.main.conditional_access_policies()",
+        },
+        {
+          description: "Only the enabled (enforced) policies",
+          sql: "SELECT display_name FROM azure.main.conditional_access_policies() WHERE state = 'enabled'",
+        },
+        {
+          description: "Grant controls (e.g. MFA / compliant device) for each enabled policy",
+          sql: "SELECT display_name, grant_controls_json FROM azure.main.conditional_access_policies() WHERE state = 'enabled'",
+        },
+      ]),
       "vgi.keywords": JSON.stringify([
         "conditional access",
         "ca policy",
@@ -155,6 +171,22 @@ export function makeRoleAssignments(clientFactory: ClientFactory) {
     tags: {
       "vgi.category": "role-assignments",
       "vgi.title": "Directory Role Assignments",
+      // VGI515: mirror `examples` as a described JSON tag (the native examples
+      // carrier drops descriptions).
+      "vgi.example_queries": JSON.stringify([
+        {
+          description: "All directory role assignments (active and PIM-eligible)",
+          sql: "SELECT assignment_kind, role_display_name, principal_id FROM azure.main.role_assignments()",
+        },
+        {
+          description: "Only PIM-eligible (not yet activated) assignments",
+          sql: "SELECT role_display_name, principal_id, status FROM azure.main.role_assignments() WHERE assignment_kind = 'eligible'",
+        },
+        {
+          description: "Active assignment count per directory role",
+          sql: "SELECT role_display_name, count(*) FROM azure.main.role_assignments() WHERE assignment_kind = 'active' GROUP BY role_display_name ORDER BY count(*) DESC",
+        },
+      ]),
       "vgi.keywords": JSON.stringify([
         "role assignments",
         "directory roles",
@@ -253,6 +285,22 @@ export function makeAppCredentials(clientFactory: ClientFactory) {
     tags: {
       "vgi.category": "credential-hygiene",
       "vgi.title": "App & Service Principal Credentials",
+      // VGI515: mirror `examples` as a described JSON tag (the native examples
+      // carrier drops descriptions).
+      "vgi.example_queries": JSON.stringify([
+        {
+          description: "Full credential inventory across apps and service principals",
+          sql: "SELECT owner_display_name, credential_type, end_date_time, days_until_expiry FROM azure.main.app_credentials()",
+        },
+        {
+          description: "Credentials expiring within the next 30 days (soonest first)",
+          sql: "SELECT owner_display_name, credential_type, days_until_expiry FROM azure.main.app_credentials(expiring_within_days := 30) ORDER BY days_until_expiry",
+        },
+        {
+          description: "Credentials that are already expired",
+          sql: "SELECT owner_kind, owner_display_name, credential_type, end_date_time FROM azure.main.app_credentials() WHERE is_expired",
+        },
+      ]),
       "vgi.keywords": JSON.stringify([
         "app credentials",
         "service principal",
