@@ -8,7 +8,8 @@
 // strings; every example SQL is catalog-qualified (azure.main.<fn>) so it binds when the
 // catalog is attached. The governance functions require an `azure_graph` secret to RUN,
 // so the executable examples are credential-free `LIMIT 0` bind probes and the agent-test
-// tasks are graded by success_criteria (they execute once an azure_graph secret is attached).
+// tasks are graded from the vgi-agent-tests.yaml sidecar (they execute once an azure_graph
+// secret is attached).
 
 import { Schema, Field, Utf8 } from "@query-farm/apache-arrow";
 import type { CatalogDescriptor, SecretTypeDescriptor, VgiFunction } from "@query-farm/vgi";
@@ -94,38 +95,22 @@ const CATALOG_TAGS: Record<string, string> = {
       sql: "SELECT owner_display_name, credential_type, end_date_time, days_until_expiry, is_expired FROM azure.main.app_credentials() LIMIT 0",
     },
   ]),
-  // The agent-suitability suite (VGI152), catalog only. Governance scans require an
-  // azure_graph secret and return tenant-specific, non-deterministic data, so these
-  // tasks are graded by success_criteria (LLM judge) rather than a reference_sql /
-  // check_sql oracle (which would need live credentials and stable ground truth).
+  // The agent-suitability suite (VGI152), catalog only. Only each task's name + prompt is
+  // published here (VGI416); the grader fields (reference_sql / success_criteria)
+  // live in the private sidecar vgi-agent-tests.yaml, keyed by task name, and are never
+  // shown to the analyst.
   "vgi.agent_test_tasks": JSON.stringify([
     {
       name: "enabled_ca_policies",
       prompt: "List the enabled Conditional Access policies in the Entra ID tenant with their display names.",
-      // reference_sql / success_criteria are GRADER-ONLY (never shown to the analyst). It
-      // declares per-object test coverage (VGI520) by calling the table function; it cannot
-      // actually execute without an attached azure_graph secret, so live agent-simulation
-      // (VGI920) is credential-blocked — grading falls to success_criteria when creds exist.
-      reference_sql:
-        "SELECT display_name FROM azure.main.conditional_access_policies() WHERE state = 'enabled' ORDER BY display_name",
-      success_criteria:
-        "The answer queries azure.main.conditional_access_policies(), filters to state = 'enabled', and returns display_name.",
     },
     {
       name: "global_admins",
       prompt: "Who holds the Global Administrator directory role, and are those assignments active or PIM-eligible?",
-      reference_sql:
-        "SELECT principal_id, assignment_kind FROM azure.main.role_assignments() WHERE role_display_name = 'Global Administrator' ORDER BY principal_id, assignment_kind",
-      success_criteria:
-        "The answer queries azure.main.role_assignments(), filters role_display_name to the Global Administrator role, and returns principal_id together with the assignment_kind ('active' vs 'eligible') discriminator.",
     },
     {
       name: "credentials_expiring_soon",
       prompt: "Which application or service-principal credentials expire within the next 30 days?",
-      reference_sql:
-        "SELECT owner_display_name, credential_type, days_until_expiry FROM azure.main.app_credentials(expiring_within_days := 30) ORDER BY days_until_expiry, owner_display_name",
-      success_criteria:
-        "The answer queries azure.main.app_credentials(), restricts to credentials expiring within 30 days (via the expiring_within_days := 30 argument or a WHERE days_until_expiry <= 30 filter), and returns the owner and expiry information.",
     },
   ]),
 };

@@ -1,0 +1,36 @@
+# Private grader sidecar for `vgi-lint simulate` (and `lint`'s VGI520 coverage). The worker
+# publishes only task names + prompts in `vgi.agent_test_tasks` (src/catalog.ts); these
+# grader fields are keyed by that name and never sent to the analyst agent.
+#
+# Governance scans require an azure_graph secret and return tenant-specific,
+# non-deterministic data. `reference_sql` declares per-object test coverage (VGI520) by
+# calling the table function; it cannot execute without an attached azure_graph secret, so
+# live agent-simulation (VGI920) is credential-blocked and grading falls to the
+# `success_criteria` LLM-judge rubric.
+tasks:
+  - name: enabled_ca_policies
+    reference_sql: >-
+      SELECT display_name FROM azure.main.conditional_access_policies() WHERE state =
+      'enabled' ORDER BY display_name
+    success_criteria: >-
+      The answer queries azure.main.conditional_access_policies(), filters to state =
+      'enabled', and returns display_name.
+
+  - name: global_admins
+    reference_sql: >-
+      SELECT principal_id, assignment_kind FROM azure.main.role_assignments() WHERE
+      role_display_name = 'Global Administrator' ORDER BY principal_id, assignment_kind
+    success_criteria: >-
+      The answer queries azure.main.role_assignments(), filters role_display_name to the
+      Global Administrator role, and returns principal_id together with the assignment_kind
+      ('active' vs 'eligible') discriminator.
+
+  - name: credentials_expiring_soon
+    reference_sql: >-
+      SELECT owner_display_name, credential_type, days_until_expiry FROM
+      azure.main.app_credentials(expiring_within_days := 30) ORDER BY days_until_expiry,
+      owner_display_name
+    success_criteria: >-
+      The answer queries azure.main.app_credentials(), restricts to credentials expiring
+      within 30 days (via the expiring_within_days := 30 argument or a WHERE days_until_expiry
+      <= 30 filter), and returns the owner and expiry information.
