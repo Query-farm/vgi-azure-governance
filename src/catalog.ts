@@ -12,6 +12,7 @@
 // secret is attached).
 
 import { Schema, Field, Utf8 } from "@query-farm/apache-arrow";
+import { constraintRecord } from "@query-farm/vgi";
 import type { CatalogDescriptor, SecretTypeDescriptor, VgiFunction } from "@query-farm/vgi";
 
 const REPO = "https://github.com/Query-farm/vgi-azure-governance";
@@ -310,6 +311,9 @@ const ROLE_TABLE_TAGS: Record<string, string> = {
   ]),
 };
 
+/** Constraint schemaPath: exactly one component (the schema name). */
+const S = ["main"];
+
 export function makeCatalog(functions: VgiFunction[]): CatalogDescriptor {
   const byName = new Map(functions.map((f) => [f.meta.name, f] as const));
   const caFn = byName.get("conditional_access_policies");
@@ -339,10 +343,12 @@ export function makeCatalog(functions: VgiFunction[]): CatalogDescriptor {
             comment: "Microsoft Entra Conditional Access policies (snapshot) via Microsoft Graph v1.0.",
             tags: CA_TABLE_TAGS,
             columnComments: CA_COLUMN_COMMENTS,
-            // Mirrors the non-nullable fields of CA_POLICIES_SCHEMA.
-            notNull: ["id"],
             // Each policy id is a unique GUID — the natural key of this snapshot.
-            primaryKey: [["id"]],
+            // (The PK record also serves `id` NOT NULL, mirroring CA_POLICIES_SCHEMA.)
+            constraints: [
+              constraintRecord({ schemaPath: S, table: "conditional_access_policies", id: "conditional_access_policies.pk",
+                kind: "PRIMARY_KEY", columns: [["id"]], enforcement: "ENFORCED", validation: "ALL_ROWS" }),
+            ],
           },
           {
             name: "role_assignments",
@@ -351,11 +357,17 @@ export function makeCatalog(functions: VgiFunction[]): CatalogDescriptor {
               "Microsoft Entra directory role assignments — active ∪ PIM-eligible (snapshot) via Microsoft Graph v1.0.",
             tags: ROLE_TABLE_TAGS,
             columnComments: ROLE_COLUMN_COMMENTS,
-            // Mirrors the non-nullable fields of ROLE_ASSIGNMENTS_SCHEMA.
-            notNull: ["assignment_kind", "id", "principal_id", "role_definition_id"],
+            // NOT_NULL records mirror the non-nullable fields of ROLE_ASSIGNMENTS_SCHEMA.
             // The union carries two id spaces (active roleAssignments and eligible
             // schedule instances); (assignment_kind, id) is the unique natural key.
-            primaryKey: [["assignment_kind", "id"]],
+            constraints: [
+              constraintRecord({ schemaPath: S, table: "role_assignments", id: "role_assignments.principal_id.not_null",
+                kind: "NOT_NULL", columns: [["principal_id"]], enforcement: "ENFORCED", validation: "ALL_ROWS" }),
+              constraintRecord({ schemaPath: S, table: "role_assignments", id: "role_assignments.role_definition_id.not_null",
+                kind: "NOT_NULL", columns: [["role_definition_id"]], enforcement: "ENFORCED", validation: "ALL_ROWS" }),
+              constraintRecord({ schemaPath: S, table: "role_assignments", id: "role_assignments.pk",
+                kind: "PRIMARY_KEY", columns: [["assignment_kind"], ["id"]], enforcement: "ENFORCED", validation: "ALL_ROWS" }),
+            ],
           },
         ],
         functions,
