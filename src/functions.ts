@@ -48,6 +48,9 @@ interface SingleWalkState {
 export function makeConditionalAccessPolicies(clientFactory: ClientFactory) {
   return defineTableFunction<Record<string, never>, SingleWalkState>({
     name: "conditional_access_policies",
+    // Request the azure_graph secret at bind so the connector delivers it (a
+    // missing secret resolves to nothing, so credential-free LIMIT 0 binds still work).
+    requiredSecrets: ["azure_graph"],
     description:
       "Microsoft Entra Conditional Access policies via Graph v1.0 (snapshot — full pull, no cursor).",
     examples: [
@@ -152,6 +155,9 @@ interface RoleWalkState {
 export function makeRoleAssignments(clientFactory: ClientFactory) {
   return defineTableFunction<Record<string, never>, RoleWalkState>({
     name: "role_assignments",
+    // Request the azure_graph secret at bind so the connector delivers it (a
+    // missing secret resolves to nothing, so credential-free LIMIT 0 binds still work).
+    requiredSecrets: ["azure_graph"],
     description:
       "Entra directory role assignments — active ∪ PIM-eligible unioned with an assignment_kind discriminator (snapshot).",
     examples: [
@@ -260,6 +266,9 @@ interface CredWalkState {
 export function makeAppCredentials(clientFactory: ClientFactory) {
   return defineTableFunction<AppCredArgs, CredWalkState>({
     name: "app_credentials",
+    // Request the azure_graph secret at bind so the connector delivers it (a
+    // missing secret resolves to nothing, so credential-free LIMIT 0 binds still work).
+    requiredSecrets: ["azure_graph"],
     description:
       "Flattened app & service-principal password/key credentials with scan-time days_until_expiry / is_expired (snapshot). expiring_within_days filters after flatten.",
     args: { expiring_within_days: new Int64() },
