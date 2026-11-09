@@ -31,6 +31,8 @@ export const AZURE_GRAPH_SECRET: SecretTypeDescriptor = {
 /** Catalog-level tags: docs, discovery, provenance, and the agent-test suite. */
 const CATALOG_TAGS: Record<string, string> = {
   "vgi.title": "Microsoft Entra Governance",
+  "vgi.subtitle":
+    "Audit an Entra ID tenant's Conditional Access policies, directory role assignments, and expiring app credentials.",
   "vgi.doc_llm":
     "Microsoft Entra ID (Azure AD) security-governance posture as SQL table functions over Microsoft " +
     "Graph. Reach for it to audit a tenant's Conditional Access policies, privileged directory role " +
@@ -227,7 +229,7 @@ const ROLE_COLUMN_COMMENTS: Record<string, string> = {
 };
 
 const CA_TABLE_TAGS: Record<string, string> = {
-  "vgi.title": "Entra Conditional Access Policies",
+  "vgi.title": "Conditional Access",
   "vgi.category": "conditional-access",
   domain: "security",
   "vgi.keywords": JSON.stringify([
