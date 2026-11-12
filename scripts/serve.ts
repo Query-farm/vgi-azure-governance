@@ -54,7 +54,7 @@ const catalogInterface = new ReadOnlyCatalogInterface(makeCatalog(functions), re
 serveVgiWorker({
   name: "azure",
   doc: "Microsoft Entra ID (Azure AD) security-governance posture — Conditional Access policies, privileged directory role assignments (active plus PIM-eligible), and application / service-principal credential expiry — as SNAPSHOT table functions over Microsoft Graph.",
-  version: "0.3.0",
+  version: "0.4.0",
   repositoryUrl: "https://github.com/Query-farm/vgi-azure-governance",
   serverId: "vgi-azure-governance",
   registry,

@@ -21,11 +21,34 @@ const ISSUES = `${REPO}/issues`;
 export const AZURE_GRAPH_SECRET: SecretTypeDescriptor = {
   name: "azure_graph",
   description: "Microsoft Entra app-only (client-credentials) credentials for Microsoft Graph",
-  schema: new Schema([
-    new Field("tenant_id", new Utf8(), true),
-    new Field("client_id", new Utf8(), true),
-    new Field("client_secret", new Utf8(), true, new Map([["redact", "true"]])),
-  ]),
+  // vgi_doc (per parameter) and vgi_doc_url (schema) document where each credential
+  // comes from (vgi-lint VGI1011 / VGI1012).
+  schema: new Schema(
+    [
+      new Field(
+        "tenant_id",
+        new Utf8(),
+        true,
+        new Map([["vgi_doc", "Directory (tenant) ID of the Microsoft Entra tenant, from the app registration's Overview page"]]),
+      ),
+      new Field(
+        "client_id",
+        new Utf8(),
+        true,
+        new Map([["vgi_doc", "Application (client) ID of the Microsoft Entra app registration, from its Overview page"]]),
+      ),
+      new Field(
+        "client_secret",
+        new Utf8(),
+        true,
+        new Map([
+          ["redact", "true"],
+          ["vgi_doc", "Client secret value created under the app registration's Certificates & secrets page (shown once, at creation)"],
+        ]),
+      ),
+    ],
+    new Map([["vgi_doc_url", "https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app"]]),
+  ),
 };
 
 /** Catalog-level tags: docs, discovery, provenance, and the agent-test suite. */
@@ -45,12 +68,11 @@ const CATALOG_TAGS: Record<string, string> = {
     "directory role, and which app credentials are expired or expiring soon.",
   "vgi.doc_md":
     "## Microsoft Entra Governance\n\n" +
-    "Security-governance snapshots of a Microsoft Entra ID (Azure AD) tenant via Microsoft Graph, " +
-    "exposed as three DuckDB table functions.\n\n" +
-    "- **`conditional_access_policies`** — Conditional Access policies (state, targets, grant/session controls).\n" +
-    "- **`role_assignments`** — directory role assignments, active plus PIM-eligible, with an `assignment_kind` discriminator.\n" +
-    "- **`app_credentials`** — flattened app & service-principal password/key credentials with scan-time expiry.\n\n" +
-    "Each function is a full-pull snapshot (no delta cursor, no marker row): every scan returns the " +
+    "Security-governance snapshots of a Microsoft Entra ID (Azure AD) tenant via Microsoft Graph: " +
+    "Conditional Access policy posture (state, targets, grant/session controls), directory role " +
+    "assignments (active plus PIM-eligible, told apart by an `assignment_kind` discriminator), and " +
+    "app / service-principal credential hygiene (password and key credentials with scan-time expiry).\n\n" +
+    "Each surface is a full-pull snapshot (no delta cursor, no marker row): every scan returns the " +
     "complete current state, so refresh by replacing the target table wholesale. An app-only `azure_graph` secret (Microsoft Entra client credentials) is required.",
   "vgi.keywords": JSON.stringify([
     "azure",
@@ -130,12 +152,10 @@ const SCHEMA_TAGS: Record<string, string> = {
     "days_until_expiry / is_expired and accepts an optional expiring_within_days filter.",
   "vgi.doc_md":
     "## Entra governance snapshot functions\n\n" +
-    "| Function | Surface | Returns |\n" +
-    "| --- | --- | --- |\n" +
-    "| `conditional_access_policies` | Conditional Access | one row per CA policy |\n" +
-    "| `role_assignments` | Directory roles | active ∪ PIM-eligible assignments |\n" +
-    "| `app_credentials` | Credential hygiene | one row per app/SP password or key credential |\n\n" +
-    "All three are full-pull snapshots (no `_row_kind` marker, no delta cursor): every scan is the " +
+    "Snapshot functions over three governance surfaces of a Microsoft Entra tenant: Conditional " +
+    "Access (one row per policy), directory roles (active ∪ PIM-eligible assignments), and credential " +
+    "hygiene (one row per app / service-principal password or key credential).\n\n" +
+    "All are full-pull snapshots (no `_row_kind` marker, no delta cursor): every scan is the " +
     "complete current state. Refresh by replacing the target table. Each requires an app-only " +
     "`azure_graph` secret.",
   "vgi.keywords": JSON.stringify([
