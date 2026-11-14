@@ -39,3 +39,12 @@ The companion imports the original function/catalog factories and injects the sh
 ## Live access is separate
 
 Actual `app_credentials` reads need an `azure_graph` secret and Microsoft Graph `Application.Read.All` application permission, provisioned outside saved notebook cells/outputs. Follow the [worker's credential documentation](https://github.com/Query-farm/vgi-azure-governance#credentials). No live tenant was queried for this notebook. The fixture demonstrates metadata classification, not effective access, privilege, credential use or a production rotation decision.
+
+## SQL credential isolation
+
+The notebook creates Haybarn with a fresh temporary `secret_directory` and
+`allow_persistent_secrets=False` before attaching workers. It fully drains and
+checks an empty secret inventory, then creates only explicitly `TEMPORARY`
+public fixture secrets and verifies their `persistent=false`, `storage=memory`
+metadata. Cleanup removes the temporary directory after closing the connection.
+Existing user SQL secrets are neither read, modified nor deleted.
