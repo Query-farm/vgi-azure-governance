@@ -1,0 +1,134 @@
+{
+  "description": "Entirely synthetic credential metadata. No keys, tokens, secret values, tenant identifiers or real application data.",
+  "audit_as_of": "2026-11-14T00:00:00Z",
+  "graph": {
+    "applicationsPage1": [
+      {
+        "id": "app-a",
+        "appId": "synthetic-client-app-a",
+        "displayName": "Synthetic Billing",
+        "passwordCredentials": [
+          {
+            "keyId": "app-a-cred-1",
+            "displayName": "Synthetic credential 1",
+            "startDateTime": "2026-01-01T00:00:00Z",
+            "endDateTime": "2026-11-09T00:00:00Z"
+          },
+          {
+            "keyId": "app-a-cred-3",
+            "displayName": "Synthetic credential 3",
+            "startDateTime": "2026-01-01T00:00:00Z",
+            "endDateTime": null
+          }
+        ],
+        "keyCredentials": [
+          {
+            "keyId": "app-a-cred-2",
+            "displayName": "Synthetic credential 2",
+            "startDateTime": "2026-01-01T00:00:00Z",
+            "endDateTime": "2026-11-24T00:00:00Z",
+            "usage": "Verify"
+          }
+        ]
+      },
+      {
+        "id": "app-b",
+        "appId": "synthetic-client-app-b",
+        "displayName": "Synthetic Export",
+        "passwordCredentials": [
+          {
+            "keyId": "app-b-cred-1",
+            "displayName": "Synthetic credential 1",
+            "startDateTime": "2026-01-01T00:00:00Z",
+            "endDateTime": "2026-12-14T00:00:00Z"
+          },
+          {
+            "keyId": "app-b-cred-3",
+            "displayName": "Synthetic credential 3",
+            "startDateTime": "2026-01-01T00:00:00Z",
+            "endDateTime": "2027-02-12T00:00:00Z"
+          }
+        ],
+        "keyCredentials": [
+          {
+            "keyId": "app-b-cred-2",
+            "displayName": "Synthetic credential 2",
+            "startDateTime": "2026-01-01T00:00:00Z",
+            "endDateTime": "2026-12-14T12:00:00Z",
+            "usage": "Verify"
+          }
+        ]
+      }
+    ],
+    "applicationsPage2": [
+      {
+        "id": "app-c",
+        "appId": "synthetic-client-app-c",
+        "displayName": "Synthetic Archive",
+        "passwordCredentials": [
+          {
+            "keyId": "app-c-cred-1",
+            "displayName": "Synthetic credential 1",
+            "startDateTime": "2026-01-01T00:00:00Z",
+            "endDateTime": "2027-01-13T00:00:00Z"
+          }
+        ],
+        "keyCredentials": [
+          {
+            "keyId": "app-c-cred-2",
+            "displayName": "Synthetic credential 2",
+            "startDateTime": "2026-01-01T00:00:00Z",
+            "endDateTime": "2027-05-13T00:00:00Z",
+            "usage": "Verify"
+          }
+        ]
+      }
+    ],
+    "servicePrincipals": [
+      {
+        "id": "sp-a",
+        "appId": "synthetic-client-sp-a",
+        "displayName": "Synthetic Batch",
+        "passwordCredentials": [
+          {
+            "keyId": "sp-a-cred-1",
+            "displayName": "Synthetic credential 1",
+            "startDateTime": "2026-01-01T00:00:00Z",
+            "endDateTime": "2026-11-13T00:00:00Z"
+          }
+        ],
+        "keyCredentials": [
+          {
+            "keyId": "sp-a-cred-2",
+            "displayName": "Synthetic credential 2",
+            "startDateTime": "2026-01-01T00:00:00Z",
+            "endDateTime": "2026-11-21T00:00:00Z",
+            "usage": "Verify"
+          }
+        ]
+      },
+      {
+        "id": "sp-b",
+        "appId": "synthetic-client-sp-b",
+        "displayName": "Synthetic Monitor",
+        "passwordCredentials": [
+          {
+            "keyId": "sp-b-cred-1",
+            "displayName": "Synthetic credential 1",
+            "startDateTime": "2026-01-01T00:00:00Z",
+            "endDateTime": "2026-12-29T00:00:00Z"
+          }
+        ],
+        "keyCredentials": [
+          {
+            "keyId": "sp-b-cred-2",
+            "displayName": "Synthetic credential 2",
+            "startDateTime": "2026-01-01T00:00:00Z",
+            "endDateTime": null,
+            "usage": "Verify"
+          }
+        ]
+      }
+    ]
+  }
+}

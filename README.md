@@ -70,3 +70,7 @@ ATTACH 'azure' AS azure (TYPE vgi, LOCATION '/path/to/vgi-azure-governance/bin/v
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Notebooks
+
+[Credential expiry review](notebooks/README.md) — an executed synthetic inventory walkthrough with the real worker, explicit UTC deadlines and missing-expiry checks.
