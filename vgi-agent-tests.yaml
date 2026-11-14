@@ -36,16 +36,20 @@ tasks:
       <= 30 filter), and returns the owner and expiry information.
 
   # Composed: joins conditional_access_policies (role targets live in raw_json's
-  # conditions.users.includeRoles) to role_assignments on role_definition_id. The snapshot
-  # is stable within a session, so an order-insensitive exact compare is a real oracle.
+  # conditions.users.includeRoles) to role_assignments on role_definition_id. Live,
+  # credential-gated tenant data, so no exact-compare reference_sql; the judge grades the
+  # query shape, which a wrong answer (no state filter, wrong join key, counting
+  # assignments instead of distinct principals, active-only holders) fails.
   - name: role_targeted_ca_coverage
-    reference_sql: >-
-      WITH targeted AS (SELECT t.role_id, count(DISTINCT ca.id) AS policies FROM
-      azure.main.conditional_access_policies() AS ca,
-      unnest(from_json(json_extract(ca.raw_json, '$.conditions.users.includeRoles'),
-      '["VARCHAR"]')) AS t(role_id) WHERE ca.state = 'enabled' GROUP BY t.role_id)
-      SELECT r.role_display_name, t.policies, count(DISTINCT r.principal_id) AS holders
-      FROM targeted AS t JOIN azure.main.role_assignments() AS r ON r.role_definition_id =
-      t.role_id GROUP BY r.role_display_name, t.policies ORDER BY r.role_display_name
-    unordered: true
-    ignore_column_names: true
+    success_criteria: >-
+      The answer reads azure.main.conditional_access_policies() rows with state = 'enabled'
+      (report-only 'enabledForReportingButNotEnforced' and 'disabled' policies are excluded),
+      extracts each policy's role targets from raw_json at $.conditions.users.includeRoles
+      (e.g. json_extract + from_json/unnest), and counts DISTINCT policies per role id. It
+      joins those role ids to azure.main.role_assignments() on role_definition_id, keeping
+      both 'active' and 'eligible' assignment_kind rows, and counts DISTINCT principal_id per
+      role. It returns one row per targeted role that has at least one holder with the
+      role_display_name, the policy count, and the distinct-holder count. Counting assignment
+      rows instead of distinct principals, counting non-distinct policy rows after the join
+      (inflated by the number of holders), including non-enabled policies, using included_users_json instead of
+      includeRoles, or dropping eligible assignments is incorrect.
