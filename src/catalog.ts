@@ -14,6 +14,7 @@
 import { Schema, Field, Utf8 } from "@query-farm/apache-arrow";
 import { constraintRecord } from "@query-farm/vgi";
 import type { CatalogDescriptor, SecretTypeDescriptor, VgiFunction } from "@query-farm/vgi";
+import { COMPOSED_EXAMPLES } from "./examples.js";
 
 const REPO = "https://github.com/Query-farm/vgi-azure-governance";
 const ISSUES = `${REPO}/issues`;
@@ -137,6 +138,15 @@ const CATALOG_TAGS: Record<string, string> = {
       name: "credentials_expiring_soon",
       prompt: "Which application or service-principal credentials expire within the next 30 days?",
     },
+    {
+      name: "role_targeted_ca_coverage",
+      prompt:
+        "For each directory role that at least one enabled Conditional Access policy targets by role " +
+        "(the policy's conditions.users.includeRoles), how many enabled policies target it and how many " +
+        "distinct principals (active or PIM-eligible) hold it? Only include roles that have at least one " +
+        "holder. Return three columns: the role display name, the number of targeting policies, and the " +
+        "number of distinct holders.",
+    },
   ]),
 };
 
@@ -208,6 +218,8 @@ const SCHEMA_TAGS: Record<string, string> = {
       description: "Already-expired app & service-principal credentials",
       sql: "SELECT owner_kind, owner_display_name, credential_type, end_date_time FROM azure.main.app_credentials() WHERE is_expired",
     },
+    // Composed audits joining two governance surfaces (src/examples.ts).
+    ...COMPOSED_EXAMPLES,
   ]),
 };
 
@@ -239,7 +251,7 @@ const ROLE_COLUMN_COMMENTS: Record<string, string> = {
   principal_id: "Object id of the assigned principal (user, group, or service principal).",
   principal_type: "Principal kind: `user`, `group`, or `servicePrincipal`; NULL if not resolvable.",
   role_definition_id: "The directory role definition (template) id.",
-  role_display_name: "Human-readable role name (e.g. Global Administrator); NULL if not expanded.",
+  role_display_name: "Human-readable role name (e.g. Global Administrator); from the expanded roleDefinition; NULL if Graph returns none.",
   directory_scope_id: "Scope of the assignment (e.g. `/` for tenant-wide).",
   start_date_time: "Eligibility schedule start (ISO-8601 UTC); NULL for active assignments.",
   end_date_time: "Assignment/eligibility end (ISO-8601 UTC); NULL means permanent.",

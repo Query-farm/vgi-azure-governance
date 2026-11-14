@@ -88,9 +88,12 @@ export interface RoleQueueEntry {
 }
 
 export function roleAssignmentsQueue(): RoleQueueEntry[] {
+  // Graph returns only roleDefinitionId unless the roleDefinition navigation property is
+  // expanded; without `$expand=roleDefinition` role_display_name would always be NULL.
+  const expand = "$expand=roleDefinition";
   return [
-    { url: `${GRAPH}/roleManagement/directory/roleAssignments`, kind: "active" },
-    { url: `${GRAPH}/roleManagement/directory/roleEligibilityScheduleInstances`, kind: "eligible" },
+    { url: `${GRAPH}/roleManagement/directory/roleAssignments?${expand}`, kind: "active" },
+    { url: `${GRAPH}/roleManagement/directory/roleEligibilityScheduleInstances?${expand}`, kind: "eligible" },
   ];
 }
 

@@ -30,6 +30,11 @@ import {
   buildAppCredentialBatch,
 } from "./schema.js";
 import type { GraphClient } from "@vgi-azure/graph-core";
+import {
+  CA_EXCLUDED_ROLE_HOLDERS,
+  ROLES_WITHOUT_ROLE_TARGETED_CA,
+  PRIVILEGED_SP_EXPIRING_CREDENTIALS,
+} from "./examples.js";
 
 export type ClientFactory = (secret: Record<string, unknown>) => GraphClient;
 
@@ -66,6 +71,7 @@ export function makeConditionalAccessPolicies(clientFactory: ClientFactory) {
         sql: "SELECT display_name, grant_controls_json FROM azure.main.conditional_access_policies() WHERE state = 'enabled'",
         description: "Grant controls (e.g. MFA / compliant device) for each enabled policy",
       },
+      { sql: CA_EXCLUDED_ROLE_HOLDERS.sql, description: CA_EXCLUDED_ROLE_HOLDERS.description },
     ],
     tags: {
       "vgi.category": "conditional-access",
@@ -85,6 +91,7 @@ export function makeConditionalAccessPolicies(clientFactory: ClientFactory) {
           description: "Grant controls (e.g. MFA / compliant device) for each enabled policy",
           sql: "SELECT display_name, grant_controls_json FROM azure.main.conditional_access_policies() WHERE state = 'enabled'",
         },
+        CA_EXCLUDED_ROLE_HOLDERS,
       ]),
       "vgi.keywords": JSON.stringify([
         "conditional access",
@@ -173,6 +180,7 @@ export function makeRoleAssignments(clientFactory: ClientFactory) {
         sql: "SELECT role_display_name, count(*) FROM azure.main.role_assignments() WHERE assignment_kind = 'active' GROUP BY role_display_name ORDER BY count(*) DESC",
         description: "Active assignment count per directory role",
       },
+      { sql: ROLES_WITHOUT_ROLE_TARGETED_CA.sql, description: ROLES_WITHOUT_ROLE_TARGETED_CA.description },
     ],
     tags: {
       "vgi.category": "role-assignments",
@@ -192,6 +200,7 @@ export function makeRoleAssignments(clientFactory: ClientFactory) {
           description: "Active assignment count per directory role",
           sql: "SELECT role_display_name, count(*) FROM azure.main.role_assignments() WHERE assignment_kind = 'active' GROUP BY role_display_name ORDER BY count(*) DESC",
         },
+        ROLES_WITHOUT_ROLE_TARGETED_CA,
       ]),
       "vgi.keywords": JSON.stringify([
         "role assignments",
@@ -228,7 +237,7 @@ export function makeRoleAssignments(clientFactory: ClientFactory) {
         { name: "principal_id", type: "VARCHAR", description: "Object id of the assigned principal (user, group, or service principal)." },
         { name: "principal_type", type: "VARCHAR", description: "Principal kind: user, group, or servicePrincipal; NULL if not resolvable." },
         { name: "role_definition_id", type: "VARCHAR", description: "The directory role definition (template) id." },
-        { name: "role_display_name", type: "VARCHAR", description: "Human-readable role name (e.g. Global Administrator); NULL if not expanded." },
+        { name: "role_display_name", type: "VARCHAR", description: "Human-readable role name (e.g. Global Administrator); from the expanded roleDefinition; NULL if Graph returns none." },
         { name: "directory_scope_id", type: "VARCHAR", description: "Scope of the assignment (e.g. / for tenant-wide)." },
         { name: "start_date_time", type: "VARCHAR", description: "Eligibility schedule start (ISO-8601); NULL for active assignments." },
         { name: "end_date_time", type: "VARCHAR", description: "Assignment/eligibility end (ISO-8601); NULL means permanent." },
@@ -290,6 +299,7 @@ export function makeAppCredentials(clientFactory: ClientFactory) {
         sql: "SELECT owner_kind, owner_display_name, credential_type, end_date_time FROM azure.main.app_credentials() WHERE is_expired",
         description: "Credentials that are already expired",
       },
+      { sql: PRIVILEGED_SP_EXPIRING_CREDENTIALS.sql, description: PRIVILEGED_SP_EXPIRING_CREDENTIALS.description },
     ],
     tags: {
       "vgi.category": "credential-hygiene",
@@ -309,6 +319,7 @@ export function makeAppCredentials(clientFactory: ClientFactory) {
           description: "Credentials that are already expired",
           sql: "SELECT owner_kind, owner_display_name, credential_type, end_date_time FROM azure.main.app_credentials() WHERE is_expired",
         },
+        PRIVILEGED_SP_EXPIRING_CREDENTIALS,
       ]),
       "vgi.keywords": JSON.stringify([
         "app credentials",

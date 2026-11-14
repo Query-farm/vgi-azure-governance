@@ -34,3 +34,18 @@ tasks:
       The answer queries azure.main.app_credentials(), restricts to credentials expiring
       within 30 days (via the expiring_within_days := 30 argument or a WHERE days_until_expiry
       <= 30 filter), and returns the owner and expiry information.
+
+  # Composed: joins conditional_access_policies (role targets live in raw_json's
+  # conditions.users.includeRoles) to role_assignments on role_definition_id. The snapshot
+  # is stable within a session, so an order-insensitive exact compare is a real oracle.
+  - name: role_targeted_ca_coverage
+    reference_sql: >-
+      WITH targeted AS (SELECT t.role_id, count(DISTINCT ca.id) AS policies FROM
+      azure.main.conditional_access_policies() AS ca,
+      unnest(from_json(json_extract(ca.raw_json, '$.conditions.users.includeRoles'),
+      '["VARCHAR"]')) AS t(role_id) WHERE ca.state = 'enabled' GROUP BY t.role_id)
+      SELECT r.role_display_name, t.policies, count(DISTINCT r.principal_id) AS holders
+      FROM targeted AS t JOIN azure.main.role_assignments() AS r ON r.role_definition_id =
+      t.role_id GROUP BY r.role_display_name, t.policies ORDER BY r.role_display_name
+    unordered: true
+    ignore_column_names: true
