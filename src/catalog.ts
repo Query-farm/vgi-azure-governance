@@ -52,6 +52,18 @@ export const AZURE_GRAPH_SECRET: SecretTypeDescriptor = {
   ),
 };
 
+// Upstream references rendered into the catalog docs (VGI183: link out to the service, API
+// docs and app-registration/permission docs this worker actually calls).
+const SOURCES_MD =
+  "### Sources and references\n\n" +
+  "- [List Conditional Access policies](https://learn.microsoft.com/en-us/graph/api/conditionalaccessroot-list-policies) — `conditional_access_policies`\n" +
+  "- [List role assignments](https://learn.microsoft.com/en-us/graph/api/rbacapplication-list-roleassignments) — active directory-role assignments\n" +
+  "- [List role eligibility schedule instances](https://learn.microsoft.com/en-us/graph/api/rbacapplication-list-roleeligibilityscheduleinstances) — PIM-eligible assignments\n" +
+  "- [List applications](https://learn.microsoft.com/en-us/graph/api/application-list) — app credential metadata (service principals are read the same way)\n" +
+  "- [Register an app](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app) — create the app-only client credentials, then grant `Policy.Read.All`, `RoleManagement.Read.Directory` and `Application.Read.All`";
+const SOURCES_LLM =
+  " Upstream Microsoft docs: List Conditional Access policies https://learn.microsoft.com/en-us/graph/api/conditionalaccessroot-list-policies; List role assignments https://learn.microsoft.com/en-us/graph/api/rbacapplication-list-roleassignments; List role eligibility schedule instances https://learn.microsoft.com/en-us/graph/api/rbacapplication-list-roleeligibilityscheduleinstances; List applications https://learn.microsoft.com/en-us/graph/api/application-list; Register an app https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app.";
+
 /** Catalog-level tags: docs, discovery, provenance, and the agent-test suite. */
 const CATALOG_TAGS: Record<string, string> = {
   "vgi.title": "Microsoft Entra Governance",
@@ -66,7 +78,7 @@ const CATALOG_TAGS: Record<string, string> = {
     "app-only (client-credentials) 'azure_graph' secret (tenant_id, client_id, client_secret) with " +
     "admin-consented Graph read permission (Policy.Read.All, RoleManagement.Read.Directory, " +
     "Application.Read.All). Answers questions like: which CA policies are enabled, who holds a given " +
-    "directory role, and which app credentials are expired or expiring soon.",
+    "directory role, and which app credentials are expired or expiring soon." + SOURCES_LLM,
   "vgi.doc_md":
     "## Microsoft Entra Governance\n\n" +
     "Security-governance snapshots of a Microsoft Entra ID (Azure AD) tenant via Microsoft Graph: " +
@@ -74,7 +86,7 @@ const CATALOG_TAGS: Record<string, string> = {
     "assignments (active plus PIM-eligible, told apart by an `assignment_kind` discriminator), and " +
     "app / service-principal credential hygiene (password and key credentials with scan-time expiry).\n\n" +
     "Each surface is a full-pull snapshot (no delta cursor, no marker row): every scan returns the " +
-    "complete current state, so refresh by replacing the target table wholesale. An app-only `azure_graph` secret (Microsoft Entra client credentials) is required.",
+    "complete current state, so refresh by replacing the target table wholesale. An app-only `azure_graph` secret (Microsoft Entra client credentials) is required.\n\n" + SOURCES_MD,
   "vgi.keywords": JSON.stringify([
     "azure",
     "entra id",
