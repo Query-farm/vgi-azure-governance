@@ -1,0 +1,69 @@
+# name: test/sql/offline.test
+# description: vgi-azure-governance without credentials or network: ATTACH, the advertised functions
+# and tables, and every catalog executable example (credential-free bind probes and
+# static manifests). Runs over every transport; the live Azure scans need an azure_graph
+# secret and are not exercised here.
+# group: [sql]
+
+require-env VGI_TEST_WORKER
+
+# Transport failures must fail the suite rather than silently skip it.
+set ignore_error_messages
+
+statement ok
+ATTACH 'azure' AS azure (TYPE vgi, LOCATION '{VGI_TEST_WORKER}');
+
+query TT
+SELECT DISTINCT schema_name, function_name FROM duckdb_functions() WHERE database_name = 'azure' ORDER BY ALL;
+----
+main	app_credentials
+main	conditional_access_policies
+main	role_assignments
+
+query TT
+SELECT schema_name, table_name FROM duckdb_tables() WHERE database_name = 'azure'
+UNION ALL SELECT schema_name, view_name FROM duckdb_views() WHERE database_name = 'azure' ORDER BY ALL;
+----
+main	conditional_access_policies
+main	role_assignments
+
+# conditional_access_policies_bind_probe: Bind conditional_access_policies and expose its result columns (credential-free; drop LIMIT 0 and attach an azure_graph secret to pull real policies)
+query TT
+SELECT column_name, column_type FROM (DESCRIBE SELECT id, display_name, state FROM azure.main.conditional_access_policies() LIMIT 0);
+----
+id	VARCHAR
+display_name	VARCHAR
+state	VARCHAR
+
+query I
+SELECT count(*) FROM (SELECT id, display_name, state FROM azure.main.conditional_access_policies() LIMIT 0);
+----
+0
+
+# role_assignments_bind_probe: Bind role_assignments and expose its result columns (credential-free; attach an azure_graph secret to pull real assignments)
+query TT
+SELECT column_name, column_type FROM (DESCRIBE SELECT assignment_kind, principal_id, role_display_name FROM azure.main.role_assignments() LIMIT 0);
+----
+assignment_kind	VARCHAR
+principal_id	VARCHAR
+role_display_name	VARCHAR
+
+query I
+SELECT count(*) FROM (SELECT assignment_kind, principal_id, role_display_name FROM azure.main.role_assignments() LIMIT 0);
+----
+0
+
+# app_credentials_bind_probe: Bind app_credentials and expose its result columns (credential-free; attach an azure_graph secret to pull real credentials)
+query TT
+SELECT column_name, column_type FROM (DESCRIBE SELECT owner_display_name, credential_type, end_date_time, days_until_expiry, is_expired FROM azure.main.app_credentials() LIMIT 0);
+----
+owner_display_name	VARCHAR
+credential_type	VARCHAR
+end_date_time	VARCHAR
+days_until_expiry	BIGINT
+is_expired	BOOLEAN
+
+query I
+SELECT count(*) FROM (SELECT owner_display_name, credential_type, end_date_time, days_until_expiry, is_expired FROM azure.main.app_credentials() LIMIT 0);
+----
+0
